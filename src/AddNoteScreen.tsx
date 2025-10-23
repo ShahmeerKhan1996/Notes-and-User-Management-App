@@ -1,54 +1,99 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../App';
 
 type AddNoteNavProp = StackNavigationProp<RootStackParamList, 'AddNote'>;
+type AddNoteRouteProp = RouteProp<RootStackParamList, 'AddNote'>;
 
 interface Props {
   navigation: AddNoteNavProp;
+  route: AddNoteRouteProp;
 }
 
-const AddNoteScreen: React.FC<Props> = ({ navigation }) => {
+interface Note {
+  id: number;
+  title: string;
+  description: string;
+}
+
+const AddNoteScreen: React.FC<Props> = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const noteId = route.params?.noteId;
+
+  useEffect(() => {
+    if (noteId) {
+      setIsEditMode(true);
+      loadNoteForEdit(noteId);
+    }
+  }, [noteId]);
+
+  const loadNoteForEdit = async (id: number) => {
+    const loggedUser = JSON.parse(await AsyncStorage.getItem('loggedUser') || '{}');
+    const storedNotes = await AsyncStorage.getItem(`notes_${loggedUser.username}`);
+    const notes: Note[] = storedNotes ? JSON.parse(storedNotes) : [];
+    const noteToEdit = notes.find((n) => n.id === id);
+    if (noteToEdit) {
+      setTitle(noteToEdit.title);
+      setDescription(noteToEdit.description);
+    }
+  };
 
   const saveNote = async () => {
     if (!title.trim() || !description.trim()) {
-      return Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Error', 'Please enter both title and description.');
+      return;
     }
 
     const loggedUser = JSON.parse(await AsyncStorage.getItem('loggedUser') || '{}');
-    const notesKey = `notes_${loggedUser.username}`;
-    const storedNotes = await AsyncStorage.getItem(notesKey);
-    const notes = storedNotes ? JSON.parse(storedNotes) : [];
+    const storedNotes = await AsyncStorage.getItem(`notes_${loggedUser.username}`);
+    let notes: Note[] = storedNotes ? JSON.parse(storedNotes) : [];
 
-    const newNote = { id: Date.now(), title, description };
-    const updatedNotes = [...notes, newNote];
-    await AsyncStorage.setItem(notesKey, JSON.stringify(updatedNotes));
+    if (isEditMode && noteId) {
+      notes = notes.map((n) =>
+        n.id === noteId ? { ...n, title, description } : n
+      );
+      Alert.alert('Success', 'Note updated successfully!');
+    } else {
+      const newNote: Note = {
+        id: Date.now(),
+        title,
+        description,
+      };
+      notes.push(newNote);
+      Alert.alert('Success', 'Note added successfully!');
+    }
 
-    navigation.goBack(); // return to NotesListScreen
+    await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(notes));
+    navigation.navigate('NotesList');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add New Note</Text>
+      <Text style={styles.heading}>{isEditMode ? 'Edit Note' : 'Add Note'}</Text>
+
       <TextInput
-        placeholder="Note Title"
+        style={styles.input}
+        placeholder="Enter Title"
         value={title}
         onChangeText={setTitle}
-        style={styles.input}
       />
       <TextInput
-        placeholder="Note Description"
+        style={[styles.input, { height: 120 }]}
+        placeholder="Enter Description"
         value={description}
         onChangeText={setDescription}
-        style={[styles.input, { height: 120, textAlignVertical: 'top' }]}
         multiline
       />
-      <TouchableOpacity style={styles.button} onPress={saveNote}>
-        <Text style={styles.buttonText}>Save Note</Text>
+
+      <TouchableOpacity style={styles.saveButton} onPress={saveNote}>
+        <Text style={styles.saveButtonText}>
+          {isEditMode ? 'Update Note' : 'Save Note'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -58,8 +103,23 @@ export default AddNoteScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 15 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, marginBottom: 15 },
-  button: { backgroundColor: '#28A745', padding: 15, borderRadius: 8 },
-  buttonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
+  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 15 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+  },
+  saveButton: {
+    backgroundColor: '#007BFF',
+    padding: 14,
+    borderRadius: 8,
+  },
+  saveButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

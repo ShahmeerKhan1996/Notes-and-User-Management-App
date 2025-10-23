@@ -1,108 +1,138 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  Image,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../App';
 
-type ProfileNavProp = StackNavigationProp<RootStackParamList, 'UserProfile'>;
+type NotesListNavProp = StackNavigationProp<RootStackParamList, 'NotesList'>;
 
 interface Props {
-  navigation: ProfileNavProp;
+  navigation: NotesListNavProp;
 }
 
-const UserProfile: React.FC<Props> = ({ navigation }) => {
-  const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [profileImage, setProfileImage] = useState('https://cdn-icons-png.flaticon.com/512/3135/3135715.png'); // default image
+interface Note {
+  id: number;
+  title: string;
+  description: string;
+}
+
+const NotesListScreen: React.FC<Props> = ({ navigation }) => {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [profileImage, setProfileImage] = useState(
+    'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+  );
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadNotes();
+      loadProfileImage();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
-  const loadProfile = async () => {
+  const loadNotes = async () => {
     const loggedUser = JSON.parse(await AsyncStorage.getItem('loggedUser') || '{}');
-    if (!loggedUser.username) return;
-
-    setFullName(loggedUser.fullName || '');
-    setUsername(loggedUser.username || '');
-    setEmail(loggedUser.email || '');
-    setPassword(loggedUser.password || '');
+    const storedNotes = await AsyncStorage.getItem(`notes_${loggedUser.username}`);
+    setNotes(storedNotes ? JSON.parse(storedNotes) : []);
   };
 
-  const saveProfile = async () => {
-    if (!fullName || !username || !email || !password) {
-      return Alert.alert('Error', 'All fields are required');
+  const loadProfileImage = async () => {
+    const loggedUser = JSON.parse(await AsyncStorage.getItem('loggedUser') || '{}');
+    if (loggedUser?.profileImage) {
+      setProfileImage(loggedUser.profileImage);
     }
+  };
 
-    // Get all users and update the current one
-    const data = await AsyncStorage.getItem('users');
-    const users = data ? JSON.parse(data) : [];
-    const updatedUsers = users.map((u: any) =>
-      u.username === username ? { ...u, fullName, email, password } : u
-    );
-
-    await AsyncStorage.setItem('users', JSON.stringify(updatedUsers));
-
-    const updatedUser = { fullName, username, email, password };
-    await AsyncStorage.setItem('loggedUser', JSON.stringify(updatedUser));
-
-    Alert.alert('Success', 'Profile updated successfully!');
+  const logout = async () => {
+    await AsyncStorage.removeItem('loggedUser');
+    navigation.replace('Login');
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.imageContainer}>
-        <Image source={{ uri: profileImage }} style={styles.image} />
+      {/* Header with Title + Profile Icon */}
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Your Notes</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
+          <Image source={{ uri: profileImage }} style={styles.profileIcon} />
+        </TouchableOpacity>
       </View>
 
-      <Text style={styles.label}>Full Name</Text>
-      <TextInput value={fullName} onChangeText={setFullName} style={styles.input} />
-
-      <Text style={styles.label}>Username</Text>
-      <TextInput value={username} editable={false} style={[styles.input, styles.disabled]} />
-
-      <Text style={styles.label}>Email</Text>
-      <TextInput value={email} onChangeText={setEmail} style={styles.input} />
-
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-      />
-
-      <TouchableOpacity style={styles.button} onPress={saveProfile}>
-        <Text style={styles.buttonText}>Save Profile</Text>
+      {/* Add Note Button */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate('AddNote')}
+      >
+        <Text style={styles.addButtonText}>+ Add Note</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backText}>← Back to Notes</Text>
+      {/* Notes List */}
+      <FlatList
+        data={notes}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.note}
+            onPress={() => navigation.navigate('NoteDetail', { noteId: String(item.id) })}
+          >
+            <Text style={styles.noteTitle}>{item.title}</Text>
+            <Text numberOfLines={1} style={styles.noteDesc}>
+              {item.description}
+            </Text>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={<Text style={styles.emptyText}>No notes yet.</Text>}
+      />
+
+      {/* Logout */}
+      <TouchableOpacity onPress={logout} style={styles.logout}>
+        <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-export default UserProfile;
+export default NotesListScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, alignItems: 'center' },
-  imageContainer: { alignItems: 'center', marginBottom: 20 },
-  image: { width: 100, height: 100, borderRadius: 50, borderWidth: 2, borderColor: '#007BFF' },
-  label: { alignSelf: 'flex-start', fontWeight: 'bold', marginTop: 10 },
-  input: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
+  container: { flex: 1, padding: 20 },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 10,
   },
-  disabled: { backgroundColor: '#f0f0f0' },
-  button: { backgroundColor: '#007BFF', padding: 15, borderRadius: 8, width: '100%', marginTop: 10 },
-  buttonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
-  backButton: { marginTop: 15 },
-  backText: { color: '#007BFF', fontWeight: '600' },
+  title: { fontSize: 24, fontWeight: 'bold' },
+  profileIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#007BFF',
+  },
+  addButton: {
+    backgroundColor: '#007BFF',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  addButtonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
+  note: {
+    backgroundColor: '#f9f9f9',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 5,
+  },
+  noteTitle: { fontSize: 16, fontWeight: 'bold' },
+  noteDesc: { color: '#555' },
+  emptyText: { textAlign: 'center', marginTop: 20, color: '#777' },
+  logout: { marginTop: 20, alignSelf: 'center' },
+  logoutText: { color: 'red', fontWeight: 'bold' },
 });

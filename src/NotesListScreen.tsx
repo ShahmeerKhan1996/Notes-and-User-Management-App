@@ -44,40 +44,43 @@ const NotesListScreen: React.FC<Props> = ({ navigation }) => {
     await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(updatedNotes));
   };
 
+  const confirmDelete = (id: number) => {
+    Alert.alert('Delete Note', 'Are you sure you want to delete this note?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => deleteNote(id) },
+    ]);
+  };
+
   const logout = async () => {
     await AsyncStorage.removeItem('loggedUser');
     navigation.replace('Login');
   };
 
   const renderItem = ({ item }: { item: Note }) => (
-    <View style={styles.note}>
-      <TouchableOpacity
-        onPress={() => navigation.navigate('NoteDetail', { noteId: String(item.id) })}
-      >
-        <Text style={styles.noteTitle}>{item.title}</Text>
-        <Text numberOfLines={1} style={styles.noteDesc}>
-          {item.description}
-        </Text>
-      </TouchableOpacity>
+    <View style={styles.noteCard}>
+      <Text style={styles.noteTitle}>{item.title}</Text>
+      <Text numberOfLines={1} style={styles.noteDesc}>{item.description}</Text>
 
-      <View style={styles.actionRow}>
+      <View style={styles.buttonRow}>
         <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => navigation.navigate('AddNote', { noteId: item.id })}
+          style={[styles.btn, styles.viewBtn]}
+          onPress={() => navigation.navigate('NoteDetail', { noteId: String(item.id) })}
         >
-          <Text style={styles.actionText}>Edit</Text>
+          <Text style={styles.btnText}>View</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() =>
-            Alert.alert('Confirm Delete', 'Delete this note?', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Delete', style: 'destructive', onPress: () => deleteNote(item.id) },
-            ])
-          }
+          style={[styles.btn, styles.editBtn]}
+          onPress={() => navigation.navigate('AddNote', { noteId: item.id })}
         >
-          <Text style={styles.actionText}>Delete</Text>
+          <Text style={styles.btnText}>Edit</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.btn, styles.deleteBtn]}
+          onPress={() => confirmDelete(item.id)}
+        >
+          <Text style={styles.btnText}>Delete</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -85,12 +88,9 @@ const NotesListScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Notes</Text>
+      <Text style={styles.header}>Your Notes</Text>
 
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => navigation.navigate('AddNote')}
-      >
+      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddNote')}>
         <Text style={styles.addButtonText}>+ Add Note</Text>
       </TouchableOpacity>
 
@@ -112,38 +112,29 @@ export default NotesListScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  addButton: {
-    backgroundColor: '#007BFF',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  addButtonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
-  note: {
+  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
+  noteCard: {
     backgroundColor: '#f9f9f9',
-    padding: 12,
     borderRadius: 8,
-    marginVertical: 5,
+    padding: 15,
+    marginVertical: 6,
   },
-  noteTitle: { fontSize: 16, fontWeight: 'bold' },
-  noteDesc: { color: '#555' },
-  actionRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 },
-  editButton: {
-    backgroundColor: '#FFC107',
+  noteTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  noteDesc: { color: '#666', marginTop: 4 },
+  buttonRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
+  btn: {
     paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderRadius: 6,
-    marginRight: 10,
+    marginLeft: 8,
   },
-  deleteButton: {
-    backgroundColor: '#FF4444',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
-  actionText: { color: '#fff', fontWeight: 'bold' },
+  viewBtn: { backgroundColor: '#007BFF' },
+  editBtn: { backgroundColor: '#FFC107' },
+  deleteBtn: { backgroundColor: '#FF4444' },
+  btnText: { color: '#fff', fontWeight: 'bold' },
+  addButton: { backgroundColor: '#007BFF', padding: 12, borderRadius: 8, marginVertical: 10 },
+  addButtonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
   logout: { marginTop: 20, alignSelf: 'center' },
   logoutText: { color: 'red', fontWeight: 'bold' },
-  emptyText: { textAlign: 'center', marginTop: 20, color: '#777' },
+  emptyText: { textAlign: 'center', color: '#777', marginTop: 20 },
 });
