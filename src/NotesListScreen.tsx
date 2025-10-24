@@ -23,8 +23,23 @@ interface Note {
   description: string;
 }
 
+// const NotesListScreen: React.FC<Props> = ({ navigation }) => {
+//   const [notes, setNotes] = useState<Note[]>([]);
+
+//   useEffect(() => {
+//     const unsubscribe = navigation.addListener('focus', loadNotes);
+//     return unsubscribe;
+//   }, [navigation]);
+
 const NotesListScreen: React.FC<Props> = ({ navigation }) => {
   const [notes, setNotes] = useState<Note[]>([]);
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => null,
+      gestureEnabled: false,
+    });
+  }, [navigation]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', loadNotes);

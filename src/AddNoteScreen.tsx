@@ -69,7 +69,7 @@ const AddNoteScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(notes));
-    navigation.navigate('NotesList');
+    navigation.replace('NotesList');
   };
 
   return (

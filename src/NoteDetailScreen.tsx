@@ -52,9 +52,10 @@ const NoteDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
       // Update AsyncStorage
       await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(updatedNotes));
+      navigation.replace('NotesList');
 
       // Navigate back to NotesList (card will disappear there immediately)
-      navigation.navigate('NotesList');
+      navigation.replace('NotesList');
     } catch (error) {
       console.log('Error deleting note:', error);
     }
@@ -98,7 +99,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#fff' },
   title: { fontSize: 26, fontWeight: 'bold', marginBottom: 10, color: '#222' },
   description: { fontSize: 16, lineHeight: 22, color: '#555' },
-  buttonRow: { flexDirection: 'row', marginTop: 30, justifyContent: 'space-around' },
+  buttonRow: {
+  flexDirection: 'row',
+  marginTop: 30,
+  justifyContent: 'flex-end', // align buttons to right
+  gap: 10, // add spacing between buttons
+},
   button: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
   editButton: { backgroundColor: '#007BFF' },
   deleteButton: { backgroundColor: '#FF4444' },

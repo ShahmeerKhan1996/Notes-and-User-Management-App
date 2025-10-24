@@ -295,7 +295,9 @@ const UserProfile: React.FC<Props> = ({ navigation }) => {
       await AsyncStorage.setItem('loggedUser', JSON.stringify(updatedUser));
 
       Alert.alert('Success', 'Profile updated successfully!');
-      navigation.goBack();
+      // navigation.goBack();
+      navigation.replace('NotesList');
+
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Failed to update profile.');
