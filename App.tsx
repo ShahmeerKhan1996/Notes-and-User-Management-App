@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -13,7 +14,7 @@ export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   NotesList: undefined;
-  AddNote: undefined;
+  AddNote: { noteId?: number };
   NoteDetail: { noteId: string };
   UserProfile: undefined;
 };
@@ -24,12 +25,49 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login',  headerLeft: () => null, }} />
-        <Stack.Screen name="Signup" component={SignupScreen} options={{ title: 'Signup' }} />
-        <Stack.Screen name="NotesList" component={NotesListScreen} options={{ title: 'My Notes' }} />
-        <Stack.Screen name="AddNote" component={AddNoteScreen} options={{ title: 'Add Note' }} />
-        <Stack.Screen name="NoteDetail" component={NoteDetailScreen} options={{ title: 'Note Detail' }} />
-        <Stack.Screen name="UserProfile" component={UserProfile} options={{ title: 'User Profile' }} />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{
+            title: 'Notes Buddy',
+             headerBackVisible: false,
+            headerLeft: () => null,
+            gestureEnabled: false,
+          }}
+        />
+
+        <Stack.Screen
+          name="Signup"
+          component={SignupScreen}
+          options={{ title: 'Signup' }}
+        />
+
+        <Stack.Screen
+          name="NotesList"
+          component={NotesListScreen}
+          options={{
+            title: 'My Notes',
+            headerBackVisible: false,
+            headerLeft: () => null,
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="AddNote"
+          component={AddNoteScreen}
+          options={{ title: 'Add Note' }}
+        />
+
+        <Stack.Screen
+          name="NoteDetail"
+          component={NoteDetailScreen}
+          options={{ title: 'Note Detail' }}
+        />
+        <Stack.Screen
+          name="UserProfile"
+          component={UserProfile}
+          options={{ title: 'User Profile' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -47,14 +47,13 @@ const NoteDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       const storedNotes = await AsyncStorage.getItem(`notes_${loggedUser.username}`);
       const notesList: Note[] = storedNotes ? JSON.parse(storedNotes) : [];
 
-      // Remove the note immediately
       const updatedNotes = notesList.filter((n) => n.id !== Number(noteId));
 
-      // Update AsyncStorage
+ 
       await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(updatedNotes));
       navigation.replace('NotesList');
 
-      // Navigate back to NotesList (card will disappear there immediately)
+
       navigation.replace('NotesList');
     } catch (error) {
       console.log('Error deleting note:', error);
@@ -102,8 +101,8 @@ const styles = StyleSheet.create({
   buttonRow: {
   flexDirection: 'row',
   marginTop: 30,
-  justifyContent: 'flex-end', // align buttons to right
-  gap: 10, // add spacing between buttons
+  justifyContent: 'flex-end', 
+  gap: 10, 
 },
   button: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
   editButton: { backgroundColor: '#007BFF' },
