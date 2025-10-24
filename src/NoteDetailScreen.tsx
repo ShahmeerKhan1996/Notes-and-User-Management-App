@@ -40,22 +40,24 @@ const NoteDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   const deleteNote = async () => {
-    Alert.alert('Confirm Delete', 'Are you sure you want to delete this note?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          const loggedUser = JSON.parse(await AsyncStorage.getItem('loggedUser') || '{}');
-          const storedNotes = await AsyncStorage.getItem(`notes_${loggedUser.username}`);
-          const notesList: Note[] = storedNotes ? JSON.parse(storedNotes) : [];
-          const updatedNotes = notesList.filter((n) => n.id !== Number(noteId));
-          await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(updatedNotes));
-          Alert.alert('Deleted', 'Note deleted successfully!');
-          navigation.navigate('NotesList');
-        },
-      },
-    ]);
+    try {
+      const loggedUser = JSON.parse(await AsyncStorage.getItem('loggedUser') || '{}');
+      if (!loggedUser.username) return;
+
+      const storedNotes = await AsyncStorage.getItem(`notes_${loggedUser.username}`);
+      const notesList: Note[] = storedNotes ? JSON.parse(storedNotes) : [];
+
+      // Remove the note immediately
+      const updatedNotes = notesList.filter((n) => n.id !== Number(noteId));
+
+      // Update AsyncStorage
+      await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(updatedNotes));
+
+      // Navigate back to NotesList (card will disappear there immediately)
+      navigation.navigate('NotesList');
+    } catch (error) {
+      console.log('Error deleting note:', error);
+    }
   };
 
   if (!note) {

@@ -24,7 +24,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login',  headerLeft: () => null, }} />
         <Stack.Screen name="Signup" component={SignupScreen} options={{ title: 'Signup' }} />
         <Stack.Screen name="NotesList" component={NotesListScreen} options={{ title: 'My Notes' }} />
         <Stack.Screen name="AddNote" component={AddNoteScreen} options={{ title: 'Add Note' }} />

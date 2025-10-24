@@ -37,19 +37,38 @@ const NotesListScreen: React.FC<Props> = ({ navigation }) => {
     setNotes(storedNotes ? JSON.parse(storedNotes) : []);
   };
 
-  const deleteNote = async (id: number) => {
-    const loggedUser = JSON.parse(await AsyncStorage.getItem('loggedUser') || '{}');
-    const updatedNotes = notes.filter((note) => note.id !== id);
-    setNotes(updatedNotes);
-    await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(updatedNotes));
+  // const deleteNote = async (id: number) => {
+  //   const loggedUser = JSON.parse(await AsyncStorage.getItem('loggedUser') || '{}');
+  //   const updatedNotes = notes.filter((note) => note.id !== id);
+  //   setNotes(updatedNotes);
+  //   await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(updatedNotes));
+  // };
+
+  // const confirmDelete = (id: number) => {
+  //   Alert.alert('Delete Note', 'Are you sure you want to delete this note?', [
+  //     { text: 'Cancel', style: 'cancel' },
+  //     { text: 'Delete', style: 'destructive', onPress: () => deleteNote(id) },
+  //   ]);
+  // };
+
+    const deleteNote = async (id: number) => {
+    try {
+      const loggedUser = JSON.parse(await AsyncStorage.getItem('loggedUser') || '{}');
+      if (!loggedUser.username) return;
+
+      // Make sure to convert id to number for comparison
+      const updatedNotes = notes.filter((note) => note.id !== Number(id));
+
+      // Update state so FlatList removes the card immediately
+      setNotes(updatedNotes);
+
+      // Update AsyncStorage
+      await AsyncStorage.setItem(`notes_${loggedUser.username}`, JSON.stringify(updatedNotes));
+    } catch (error) {
+      console.log('Error deleting note:', error);
+    }
   };
 
-  const confirmDelete = (id: number) => {
-    Alert.alert('Delete Note', 'Are you sure you want to delete this note?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteNote(id) },
-    ]);
-  };
 
   const logout = async () => {
     await AsyncStorage.removeItem('loggedUser');
@@ -78,7 +97,7 @@ const NotesListScreen: React.FC<Props> = ({ navigation }) => {
 
         <TouchableOpacity
           style={[styles.btn, styles.deleteBtn]}
-          onPress={() => confirmDelete(item.id)}
+          onPress={() => deleteNote(item.id)}
         >
           <Text style={styles.btnText}>Delete</Text>
         </TouchableOpacity>
@@ -86,26 +105,60 @@ const NotesListScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 
+  // return (
+  //   <View style={styles.container}>
+  //     <Text style={styles.header}>Your Notes</Text>
+
+  //     <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddNote')}>
+  //       <Text style={styles.addButtonText}>+ Add Note</Text>
+  //     </TouchableOpacity>
+
+  //     <FlatList
+  //       data={notes}
+  //       keyExtractor={(item) => item.id.toString()}
+  //       renderItem={renderItem}
+  //       ListEmptyComponent={<Text style={styles.emptyText}>No notes yet.</Text>}
+  //     />
+
+  //     <TouchableOpacity onPress={logout} style={styles.logout}>
+  //       <Text style={styles.logoutText}>Logout</Text>
+  //     </TouchableOpacity>
+  //   </View>
+  // );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Your Notes</Text>
+  <View style={styles.container}>
+    <Text style={styles.header}>Your Notes</Text>
 
-      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddNote')}>
-        <Text style={styles.addButtonText}>+ Add Note</Text>
-      </TouchableOpacity>
+    <TouchableOpacity
+      style={styles.addButton}
+      onPress={() => navigation.navigate('AddNote')}
+    >
+      <Text style={styles.addButtonText}>+ Add Note</Text>
+    </TouchableOpacity>
 
-      <FlatList
-        data={notes}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-        ListEmptyComponent={<Text style={styles.emptyText}>No notes yet.</Text>}
-      />
+    <FlatList
+      data={notes}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={renderItem}
+      ListEmptyComponent={<Text style={styles.emptyText}>No notes yet.</Text>}
+    />
 
-      <TouchableOpacity onPress={logout} style={styles.logout}>
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    {/* Go to Profile Button */}
+    <TouchableOpacity
+      style={styles.profileButton}
+      onPress={() => navigation.navigate('UserProfile')}
+    >
+      <Text style={styles.profileButtonText}>Go to Profile</Text>
+    </TouchableOpacity>
+
+    {/* Logout Button */}
+    <TouchableOpacity onPress={logout} style={styles.logout}>
+      <Text style={styles.logoutText}>Logout</Text>
+    </TouchableOpacity>
+  </View>
+);
+
 };
 
 export default NotesListScreen;
@@ -119,6 +172,19 @@ const styles = StyleSheet.create({
     padding: 15,
     marginVertical: 6,
   },
+
+  profileButton: {
+  backgroundColor: '#28A745',
+  padding: 12,
+  borderRadius: 8,
+  marginTop: 10,
+},
+profileButtonText: {
+  color: '#fff',
+  textAlign: 'center',
+  fontWeight: 'bold',
+},
+
   noteTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   noteDesc: { color: '#666', marginTop: 4 },
   buttonRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },

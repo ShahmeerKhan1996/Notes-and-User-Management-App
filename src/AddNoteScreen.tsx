@@ -77,18 +77,19 @@ const AddNoteScreen: React.FC<Props> = ({ navigation, route }) => {
       <Text style={styles.heading}>{isEditMode ? 'Edit Note' : 'Add Note'}</Text>
 
       <TextInput
-        style={styles.input}
-        placeholder="Enter Title"
-        value={title}
-        onChangeText={setTitle}
-      />
+  style={styles.input}
+  placeholder="Enter Title"
+  value={title}
+  onChangeText={setTitle}
+/>
+      
       <TextInput
-        style={[styles.input, { height: 120 }]}
-        placeholder="Enter Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
+  style={[styles.input, { height: 120, textAlignVertical: 'top' }]}
+  placeholder="Enter Description"
+  value={description}
+  onChangeText={setDescription}
+  multiline
+/>
 
       <TouchableOpacity style={styles.saveButton} onPress={saveNote}>
         <Text style={styles.saveButtonText}>
